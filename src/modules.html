@@ -1,0 +1,158 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/"
+      xmlns:xi="http://www.w3.org/2001/XInclude">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Available Projects</title>
+    <!--link rel="stylesheet" type="text/css" href="style.css" /-->
+    <link rel="stylesheet" href="/core/chrome/common/css/trac.css" type="text/css" />
+    <link rel="stylesheet" href="/core/chrome/common/css/wiki.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="/projectstyle.css" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+</head>
+<body>
+
+  <div id="layout_container">
+  <div id="layout_container_inner">
+  <div id="layout_wrapper" class="projpage">
+
+    <div id="topbar">
+      <div id="topbar_content">
+
+        <a href="http://zikula.org" id="topbar_home">&nbsp;</a>
+        <a href="http://community.zikula.org" id="topbar_community">&nbsp;</a>
+        <a href="http://community.zikula.org/module-Extensions.htm" id="topbar_addons">&nbsp;</a>
+        <a href="http://blog.zikula.org" id="topbar_blog">&nbsp;</a>
+        <a href="http://demo.zikula.org" id="topbar_demo">&nbsp;</a>
+        <a href="http://code.zikula.org" id="topbar_code" class="topbar_selected">&nbsp;</a>
+
+        <div class="clearer">&nbsp;</div>
+      </div>        
+    </div>
+
+    <div class="clearer">&nbsp;</div>
+
+    <div id="layout_header">
+
+      <div id="logo">
+        <a href="/"><img src="/logo.gif" width="241" height="72" alt="" /></a>
+        <div class="clearer">&nbsp;</div>
+      </div>
+
+      <div id="metanav" class="nav">
+        <ul>
+          <li class="first"><a href="/core/register">Register</a></li>
+          <li class="last"><a href="/core/login">Login</a></li>
+        </ul>
+      </div>
+      <div id="sso_note">(Each project requires you to login separately)</div>
+
+      <div id="navigation">
+        <div class="navigation_edge left" id="navigation_edge_left"></div>
+        <div class="navigation_edge right" id="navigation_edge_right"></div>
+        <div id="mainnav" class="nav">
+          <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/core/">Zikula Core</a></li>
+            <li><a href="/projects.html">Projects</a></li>
+            <li><a href="http://community.zikula.org">Community &amp; Support</a></li>
+            <li><a href="/core/search">Search</a></li>
+          </ul>
+        </div>
+        <div class="clearer">&nbsp;</div>
+      </div>
+    </div>
+
+    <div id="layout_body">
+
+      <div id="pagetitle">
+        <h1>Available Extensions Projects</h1>
+      </div>
+
+      <div id="main">
+        <div id="main_content" class="project-list">
+
+          <div>
+          <py:def function="sortable_th(order, desc, Class, title, href)">
+            <th class="${Class}${order == Class and (desc and ' desc' or ' asc') or ''}">
+            <a title="Sort by ${Class}${order == Class and not desc and ' (descending)' or ''}" href="${href}?order=${Class}&amp;desc=${(Class == order and not desc and 1 or None)}">
+              $title
+            </a>
+            </th>
+          </py:def>
+          </div>
+
+          <table class="listing">
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <py:for each="line, project in enumerate(projects)">
+              <tr class="${line % 2 and 'even' or 'odd'}">
+                <td class="projects">
+                  <div class="name">
+                    <a href="$project.href" title="$project.description">$project.name</a>
+                  </div>
+                </td>
+                <td class="description">
+                  <div class="description">
+                    ${project.description}
+                  </div>
+                </td>
+              </tr>
+              </py:for>
+            </tbody>
+          </table>
+
+        </div>
+        <div class="clearer">&nbsp;</div>
+      </div>
+
+      <div class="clearer">&nbsp;</div>
+    </div>
+
+    <!--
+    <div id="layout_footer_ads">
+      Ads code
+    </div>
+    -->
+
+    <div id="layout_footer">
+      <div class="left">
+        &copy; Zikula Software Foundation<br />
+        <span class="zk-sub">Zikula was established 2001 - over 4 Million downloads</span>
+      </div>
+      <div class="right text_taright">
+        <a href="http://blog.zikula.org">Developer's Blog</a> <span class="text_separator">|</span> <a href="http://code.zikula.org/core/">Core Project</a> <span class="text_separator">|</span> <a href="http://www.zikulapro.com">Hire a Zikula Professional</a>
+        <br />Visit the Zikula open source project at <a href="http://zikula.org">zikula.org</a>
+      </div>
+      <div class="clearer">&nbsp;</div>
+    </div>
+
+    <div id="layout_bottom">
+      <div class="left">
+        Powered by <a href="http://trac.edgewall.org">Trac</a>
+      </div>
+      <div class="right text_taright">
+        Design by <a href="http://arcsin.se/">Arcsin</a>
+      </div>
+      <div class="clearer">&nbsp;</div>
+    </div>
+
+	<script type="text/javascript"> var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www."); document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E")); </script>
+	<script type="text/javascript"> try { var pageTracker = _gat._getTracker("UA-6664176-7"); pageTracker._trackPageview(); } catch(err) {}</script>
+
+  </div>
+  </div>
+  </div>
+
+
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      xmlns:py="http://genshi.edgewall.org/"
+      py:strip="">
+
+  <div py:def="navigation(category)" id="${category}" class="nav">
+    <ul py:if="chrome.nav[category]">
+      <li py:for="idx, item in  enumerate(chrome.nav[category])"
+          class="${classes(first_last(idx, chrome.nav[category]), active=item.active)}">${item.label}</li>
+    </ul>
+  </div>
+
+  <py:match path="body" once="true" buffer="false"><body>
+  <div id="layout_container">
+  <div id="layout_container_inner">
+  <div id="layout_wrapper">
+
+    <div id="topbar">
+      <div id="topbar_content">
+
+        <a href="http://zikula.org" id="topbar_home">&nbsp;</a>
+        <a href="http://community.zikula.org" id="topbar_community">&nbsp;</a>
+        <a href="http://community.zikula.org/module-Extensions.htm" id="topbar_addons">&nbsp;</a>
+        <a href="http://blog.zikula.org" id="topbar_blog">&nbsp;</a>
+        <a href="http://demo.zikula.org" id="topbar_demo">&nbsp;</a>
+        <a href="http://code.zikula.org" id="topbar_code" class="topbar_selected">&nbsp;</a>
+
+        <div class="clearer">&nbsp;</div>
+      </div>        
+    </div>
+
+    <div class="clearer">&nbsp;</div>
+
+    <div id="layout_header">
+
+      <div id="logo">
+        <a href="/"><img src="/logo.gif" width="241" height="72" alt="" /></a>
+        <div class="clearer">&nbsp;</div>
+      </div>
+    <div id="sso_note">(Each <a href="http://code.zikula.org/projects.html">project</a> requires you to login separately)</div>
+
+      ${navigation('metanav')}
+
+      <div id="navigation">
+        <div class="navigation_edge left" id="navigation_edge_left"></div>
+        <div class="navigation_edge right" id="navigation_edge_right"></div>
+
+        ${navigation('mainnav')}
+
+        <div class="side-header">
+        <form id="search" action="${href.search()}" method="get">
+          <div if="search_all" py:if="'SEARCH_VIEW' in perm">
+            <label for="search_question" class="overlabel">Search</label>
+            <input type="text" id="search_question" name="q" size="18" accesskey="f" value="" />
+            <input type="image" id="search_submit" alt="${_('Search')}" src="/nav_search.gif" />
+          </div>
+        </form>
+        </div>
+        <div class="clearer">&nbsp;</div>
+      </div>
+    </div>
+
+    <div id="layout_body">
+
+      <div id="pagetitle">
+        <h1>$project.name</h1>
+      </div>
+
+      <div id="main">
+        <div id="main_content">
+<py:if test="project.name == 'core' and req.environ['PATH_INFO'] == '/newticket' and (not 'preview' in req.args)">
+<div class="system-message"><strong>Note: if your problem is specific to one of the following modules, please refer to <a href="http://code.zikula.org/projects.html">it's own project page</a>, as they were <a href="http://blog.zikula.org/Blog/Second-VA-outsourcing-iteration-finished.26.html">outsourced recently</a>: Banners, blank, FAQ, Feeds, HitCount, News, Pages, Profile, Quotes, Ratings, Recommend_Us, Referers, Reviews, Stats, Thumbnail, Topics, Top_List. This is for Core Zikula only, all stuff related to the Zikula web sites should go <a href="http://code.zikula.org/zikula-site/newticket">the zikula-site project</a>.</strong></div>
+</py:if>
+
+        <div id="ctxtnav" class="nav">
+          <h2>Context Navigation</h2>
+          <ul>
+            <li py:for="i, elm in enumerate(chrome.ctxtnav)" class="${i == 0 and 'first ' or None}${i+1 == len(chrome.ctxtnav) and 'last' or None}">$elm</li>
+          </ul>
+          <hr />
+        </div>
+
+        <div id="warning" py:if="chrome.warnings" class="system-message">
+          <py:choose test="len(chrome.warnings)">
+            <py:when test="1">
+              <strong>Warning:</strong> ${chrome.warnings[0]}
+            </py:when>
+            <py:otherwise>
+              <strong>Warnings:</strong>
+              <ul><li py:for="w in chrome.warnings">$w</li></ul>
+            </py:otherwise>
+          </py:choose>
+        </div>
+        <div id="notice" py:if="chrome.notices" class="system-message">
+          <py:choose test="len(chrome.notices)">
+            <py:when test="1">
+              <strong>Notice:</strong> ${chrome.notices[0]}
+            </py:when>
+            <py:otherwise>
+              <strong>Notices:</strong>
+              <ul><li py:for="w in chrome.notices">$w</li></ul>
+            </py:otherwise>
+          </py:choose>
+        </div>
+
+        ${select('*|text()')}
+
+        <div class="clearer">&nbsp;</div>
+        </div>
+        </div>    
+      <div class="clearer">&nbsp;</div>
+    </div>
+
+    <!--div id="layout_footer_ads">
+      Ads code
+    </div-->
+
+    <div id="layout_footer">
+      <div class="left">
+        &copy; Zikula Software Foundation<br />
+        <span class="zk-sub">Zikula was established 2001 - over 4 Million downloads</span>
+      </div>
+      <div class="right text_taright">
+        <a href="http://blog.zikula.org">Developer's Blog</a> <span class="text_separator">|</span> <a href="http://code.zikula.org/core/">Core Project</a> <span class="text_separator">|</span> <a href="http://www.zikulapro.com">Hire a Zikula Professional</a>
+        <br />Visit the Zikula open source project at <a href="http://zikula.org">zikula.org</a>
+      </div>
+      <div class="clearer">&nbsp;</div>
+    </div>
+
+    <div id="layout_bottom">
+      <div class="left">
+        Powered by <a href="http://trac.edgewall.org">Trac</a>
+      </div>
+      <div class="right text_taright">
+        Design by <a href="http://arcsin.se/">Arcsin</a>
+      </div>
+      <div class="clearer">&nbsp;</div>
+    </div>
+
+	<script type="text/javascript"> var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www."); document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E")); </script>
+	<script type="text/javascript"> try { var pageTracker = _gat._getTracker("UA-6664176-7"); pageTracker._trackPageview(); } catch(err) {}</script>
+
+  </div>
+  </div>
+  </div>
+
+  </body></py:match>
+</html>

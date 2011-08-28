@@ -1,0 +1,22 @@
+#!/bin/sh
+
+MYHOOKSDIR="/home/trac/svnhooks"
+MYPROJECTPATH="/home/trac/projects/slamdummy"
+MYSVNPATH="/home/trac/svn/slamdummy"
+REPOS="$1"
+TXN="$2"
+SVNLOOK=/usr/bin/svnlook
+
+# Make sure that the log message contains some text.
+#$SVNLOOK log -t "$TXN" "$REPOS" | grep "[a-zA-Z0-9]" > /dev/null || exit 1
+
+# Check that the author of this commit has the rights to perform
+# the commit on the files and directories being modified.
+#commit-access-control.pl "$REPOS" "$TXN" commit-access-control.cfg || exit 1
+
+# PHPCS checkes go here
+#$MYHOOKSDIR/pre-commit-phpcs-checks $REPOS "$TXN" "-v --standard=Zikula" >&2 || exit 1
+
+# All checks passed, so allow the commit.
+exit 0
+

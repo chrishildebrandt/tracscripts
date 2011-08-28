@@ -1,0 +1,179 @@
+#!/bin/sh
+#
+# trac-create, version 0.9.9
+# Purpose of file: create new SVN repos with Trac multi-project setups
+# Copyright (c) 2008 by Chris (slam) Hildebrandt, K. (Drak) Dordrak
+# ----------------------------------------------------------------------
+# LICENSE
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License (GPL)
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# To read the license please visit http:#www.gnu.org/copyleft/gpl.html
+# ----------------------------------------------------------------------
+# Please read and understand what this script does before starting it.
+# It expects to be run as root, minimal documentation is inline.
+#
+# The stuff below was done for http://code.zikula.org which runs on a Xen
+# based Debian virtual machine setup. It's basicially a customized Apache
+# mod_python setup with multi SVN repositories, multi PostgreSQL
+# databases, but an inherited centralized trac.ini file and central
+# authentication via a single authz file. Also templates, styles and most
+# plugins are centralized. Real single-login will be added shortly.
+#
+# To run on different operating systems/configurations, you will need to
+# adapt the not just the variables below, but also parts of the script
+# itself. There are still some paths hard coded.
+# ----------------------------------------------------------------------
+# Usage: ./trac-create [PROJECTNAME] [PROJECTADMIN]
+#
+# !! OMITTING VARIABLES WILL LEAD TO SERIOUS PROBLEMS, THIS SCRIPT IS NOT
+# PREPARED TO HOLD YOUR HAND !!
+#
+# Variables
+SVNDIR=/home/trac/svn
+TRACDIR=/home/trac/www/projects
+WORKDIR=/home/trac/tools
+PROJECTURL=http://code.zikula.org
+DBUSER=trac
+DBPASSWORD=xxxxxx
+PROJECTNAME=$1
+PROJECTADMIN=$2
+
+# check command line params
+if [ $# -ne 2 ]; then
+  echo 1>&2 Usage: $0 [PROJECTNAME] [PROJECTADMIN]
+  exit 127
+fi
+
+# make sure we are root
+if [ "$(id -u)" -ne 0 ]; then
+[ -x "$(which su-to-root)" ] && exec su-to-root -X -c "$0" "$@"
+printf "ERROR: $0 needs root capabilities, please start it as root.\n\n" >&2
+exit 1
+fi
+
+# create the subversion project first
+ svnadmin create ${SVNDIR}/${PROJECTNAME}
+ echo "New project SVN for ${PROJECTNAME} created."
+
+# use a SVN dump if provided
+ if [ -f ${TEMPLATEDIR}/${PROJECTNAME}.dump ] ; then
+svnadmin load ${SVNDIR}/${PROJECTNAME} < /${WORKDIR}/${PROJECTNAME}.dump
+echo "SVN dump from ${PROJECTNAME}.dump imported."
+else
+
+# create the initial SVN structure
+mkdir /tmp/${PROJECTNAME}/
+mkdir /tmp/${PROJECTNAME}/branches
+mkdir /tmp/${PROJECTNAME}/tags
+mkdir /tmp/${PROJECTNAME}/trunk
+svn import /tmp/${PROJECTNAME} file://${SVNDIR}/${PROJECTNAME} -m "initial structure created" --username ${PROJECTADMIN}
+rm -R /tmp/${PROJECTNAME}
+echo "Inital SVN structure for ${PROJECTNAME} created."
+fi
+
+# fix repository ownership and access rights
+cat >${SVNDIR}/${PROJECTNAME}/conf/authz <<EOF
+[/]
+* = r
+${PROJECTADMIN} = rw
+EOF
+rm ${SVNDIR}/${PROJECTNAME}/conf/passwd
+chown -R www-data:www-data ${SVNDIR}/${PROJECTNAME}
+find ${SVNDIR}/${PROJECTNAME} -type f -exec chmod 660 {} \;
+find ${SVNDIR}/${PROJECTNAME} -type d -exec chmod 2770 {} \;
+echo "SVN for ${PROJECTNAME} is ready for usage."
+
+#create database and Trac
+PGDBASE=`echo ${PROJECTNAME} |sed 's/-//g'`
+su - postgres -c "/usr/bin/createdb -U postgres -E UTF8 $PGDBASE"
+trac-admin ${TRACDIR}/${PROJECTNAME} initenv ${PROJECTNAME} postgres://${DBUSER}:${DBPASSWORD}@localhost/${PGDBASE} svn ${SVNDIR}
+mkdir ${TRACDIR}/${PROJECTNAME}/downloads
+rm -r ${TRACDIR}/${PROJECTNAME}/htdocs
+rm -r ${TRACDIR}/${PROJECTNAME}/log
+rm -r ${TRACDIR}/${PROJECTNAME}/plugins
+rm -r ${TRACDIR}/${PROJECTNAME}/templates
+rm ${TRACDIR}/${PROJECTNAME}/conf/*
+cat >${TRACDIR}/${PROJECTNAME}/conf/trac.ini <<EOF
+# -*- coding: utf-8 -*-
+
+[downloads]
+path = ${TRACDIR}/${PROJECTNAME}/downloads
+
+[inherit]
+plugins_dir = /home/trac/plugins
+templates_dir = /home/trac/www/templates
+file = /home/trac/trac.ini
+
+[project]
+descr = ${PROJECTNAME} is a Zikula component doing nothing until you write a description here.
+name = ${PROJECTNAME}
+url = ${PROJECTURL}/${PROJECTNAME}
+
+[trac]
+authz_file = ${SVNDIR}/${PROJECTNAME}/conf/authz
+base_url = ${PROJECTURL}/${PROJECTNAME}
+database = postgres://${DBUSER}:${DBPASSWORD}@localhost/${PGDBASE}
+repository_dir = ${SVNDIR}/${PROJECTNAME}
+EOF
+
+# fix Trac ownership and access rights
+chown -R www-data:www-data ${TRACDIR}/${PROJECTNAME}
+trac-admin ${TRACDIR}/${PROJECTNAME} resync
+trac-admin ${TRACDIR}/${PROJECTNAME} upgrade --no-backup
+trac-admin ${TRACDIR}/${PROJECTNAME} permission add ${PROJECTADMIN} TRAC_ADMIN
+trac-admin ${TRACDIR}/${PROJECTNAME} permission add slam TRAC_ADMIN
+trac-admin ${TRACDIR}/${PROJECTNAME} permission add drak TRAC_ADMIN
+trac-admin ${TRACDIR}/${PROJECTNAME} permission add anonymous DOWNLOADS_VIEW
+echo "Database and Trac for ${PROJECTNAME} created, please wait for final setup ...."
+
+#time to mess with svn hooks
+cp -a ${WORKDIR}/post-commit ${SVNDIR}/${PROJECTNAME}/hooks/post-commit
+perl -pi -e 's/slamdummy/'${PROJECTNAME}'/' ${SVNDIR}/${PROJECTNAME}/hooks/post-commit
+chmod 755 ${SVNDIR}/${PROJECTNAME}/hooks/post-commit
+cp -a ${WORKDIR}/pre-commit ${SVNDIR}/${PROJECTNAME}/hooks/pre-commit
+perl -pi -e 's/slamdummy/'${PROJECTNAME}'/' ${SVNDIR}/${PROJECTNAME}/hooks/pre-commit
+chmod 755 ${SVNDIR}/${PROJECTNAME}/hooks/pre-commit
+
+# add to apache configuration and restart the server
+cat >/home/trac/projects.d/projects_${PROJECTNAME}.conf <<EOF
+<Location /${PROJECTNAME}>
+ SetHandler mod_python
+ PythonInterpreter main_interpreter
+ PythonHandler trac.web.modpython_frontend
+ PythonOption TracEnv ${TRACDIR}/${PROJECTNAME}
+ PythonOption TracUriRoot /${PROJECTNAME}
+ SetEnv PYTHON_EGG_CACHE /home/trac/python-eggs
+ Allow from All
+</Location>
+RewriteRule ^/projects/${PROJECTNAME}/(.*)$ ${PROJECTURL}/$1 [R=301]
+EOF
+cat >/home/trac/projects.d/svn_${PROJECTNAME}.conf <<EOF
+<Location /svn/${PROJECTNAME}>
+ DAV svn
+ SVNPath ${SVNDIR}/${PROJECTNAME}
+ AuthzSVNAccessFile ${SVNDIR}/${PROJECTNAME}/conf/authz
+ SVNAutoversioning on
+ Satisfy Any
+ Require valid-user
+ AuthType Basic
+ AuthName "SVN"
+ AuthUserFile ${SVNDIR}/core/conf/passwd
+ SVNPathAuthz off
+ SSLRequireSSL
+</Location>
+EOF
+/etc/init.d/apache2 restart
+
+# refresh the cached project lists for the extDb and cache
+ls /home/trac/projects > /home/trac/www/projectlist
+lynx -source ${PROJECTURL}/projects >/home/trac/www/projects.html
+echo "Done. ${PROJECTNAME} is ready to be used."

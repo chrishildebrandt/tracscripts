@@ -1,0 +1,29 @@
+= Welcome to "$project.name" =
+
+$project.name is a component for Zikula that does nothing until you write a description here.
+
+  * [http://$project.name.com Demo]
+  * [/downloads Download]
+  * [/newticket Report a Bug]
+  * [/newticket Request a Feature]
+
+== Live Examples ==
+  * No Examples yet
+
+ == Documentation ==
+  * [wiki:introduction Introduction]
+  * [wiki:installation Installation]
+  * [wiki:firstSteps First Steps]
+
+== Developers ==
+  * [wiki:Your_Name Your Name]
+
+== Subversion ==
+
+Besides the Trac integrated source browser, you may check out the latest developmental revision from our SVN using
+
+{{{
+svn co https://code.zikula.org/svn/$project.name/trunk
+}}}
+
+Write access to the SVN is possible for accepted project developers only.

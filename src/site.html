@@ -1,0 +1,10 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://genshi.edgewall.org/" py:strip="">
+ <head py:match="head" py:attrs="select('@*')">
+    ${select('*|comment()|text()')}
+    <link rel="stylesheet" type="text/css" href="/projectstyle.css" />
+ </head>
+ <body py:match="body" py:attrs="select('@*')">
+    ${select('*|text()')}
+ </body>
+</html>

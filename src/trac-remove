@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# trac-remove, version 0.9.9
+# Purpose of file: remove SVN repos with Trac multi-project setups
+# Copyright (c) 2008 by Chris (slam) Hildebrandt
+# ----------------------------------------------------------------------
+# LICENSE
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License (GPL)
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# To read the license please visit http:#www.gnu.org/copyleft/gpl.html
+# ----------------------------------------------------------------------
+# Please read and understand what this script does before starting it.
+# It expects to be run as root, minimal documentation is inline.
+#
+# The stuff below was done for http://code.zikula.org which runs on a Xen
+# based Debian virtual machine setup. It's basicially a customized Apache
+# mod_python setup with multi SVN repositories, multi PostgreSQL
+# databases, but an inherited centralized trac.ini file and central
+# authentication via a single authz file. Also templates, styles and most
+# plugins are centralized. Real single-login will be added shortly.
+#
+# To run on different operating systems/configurations, you will need to
+# adapt the not just the variables below, but also parts of the script
+# itself. There are still some paths hard coded.
+# ----------------------------------------------------------------------
+# Usage: ./trac-remove [PROJECTNAME]
+#
+# !! OMITTING VARIABLES WILL LEAD TO SERIOUS PROBLEMS, THIS SCRIPT IS NOT
+# PREPARED TO HOLD YOUR HAND !!
+#
+# Variables
+SVNDIR=/home/trac/svn
+TRACDIR=/home/trac/www/projects
+PROJECTURL=http://code.zikula.org
+PROJECTNAME=$1
+
+# check command line params
+if [ $# -ne 1 ]; then
+  echo 1>&2 Usage: $0 [PROJECTNAME] 
+  exit 127
+fi
+
+# make sure we are root
+if [ "$(id -u)" -ne 0 ]; then
+[ -x "$(which su-to-root)" ] && exec su-to-root -X -c "$0" "$@"
+printf "ERROR: $0 needs root capabilities, please start it as root.\n\n" >&2
+exit 1
+fi
+
+# remove the subversion project
+ rm -R ${SVNDIR}/${PROJECTNAME}
+ 
+ #remove database and Trac
+ PGDBASE=`echo ${PROJECTNAME} |sed 's/-//g'`
+ su - postgres -c "/usr/bin/dropdb -U postgres $PGDBASE"
+ rm -r ${TRACDIR}/${PROJECTNAME}
+ 
+ # remove apache configuration and restart the server
+ rm /home/trac/projects.d/projects_${PROJECTNAME}.conf
+ rm /home/trac/projects.d/svn_${PROJECTNAME}.conf
+ /etc/init.d/apache2 restart
+ 
+ # refresh the project lists for cached trac and the extDb
+ ls /home/trac/projects > /home/trac/www/projectlist
+ lynx -source ${PROJECTURL}/projects >/home/trac/www/projects.html
+ echo "Done. ${PROJECTNAME} has been removed."

@@ -1,0 +1,14 @@
+#!/bin/sh
+
+MYHOOKSDIR="/home/trac/svnhooks"
+MYPROJECTPATH="/home/trac/projects/slamdummy"
+MYSVNPATH="/home/trac/svn/slamdummy"
+REPOS="$1"
+REV="$2"
+
+# send commit notification email
+#$MYHOOKSDIR/commit-email.pl $MYSVNPATH "$REV" --from svncommits@example.com slamdummy-commits@googlegroups.com
+
+# update trac tickets
+/usr/bin/python $MYHOOKSDIR/trac-post-commit-hook -p $MYPROJECTPATH -r $REV
+

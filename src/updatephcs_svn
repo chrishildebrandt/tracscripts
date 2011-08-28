@@ -1,0 +1,4 @@
+#!/bin/sh
+cd /usr/share/php/PHP/CodeSniffer/Standards/
+svn co https://code.zikula.org/svn/phpcs/trunk/Zikula
+

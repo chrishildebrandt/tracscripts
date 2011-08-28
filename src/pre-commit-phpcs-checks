@@ -1,0 +1,27 @@
+#!/bin/sh
+PID=$$
+REPOS=$1
+TXN=$2
+PHPCSCMD=$3
+DONTCHECK=$4
+RT=t
+SVNLOOK=/usr/bin/svnlook
+PHPCS=/usr/bin/phpcs
+MYTMP=/tmp/phpcs/$PID
+
+mkdir -p $MYTMP
+
+# grab all changed files except deleted
+for CHANGEDFILES in `$SVNLOOK changed -$RT $TXN $REPOS | grep -v ^D | awk -F" " '{print $2}'| grep -E "$4"`
+do
+  $SVNLOOK cat -$RT $TXN $REPOS $CHANGEDFILES > $MYTMP/$PID
+  $PHPCS $PHPCSCMD $MYTMP/$PID 
+  if [ $? -eq 1 ];then
+    echo "ERROR IN FILE: $CHANGEDFILES";rm -rf $MYTMP
+    exit 1
+  fi
+done
+echo "PASSED CHECKS"
+rm -rf $MYTMP
+exit 0
+
